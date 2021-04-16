@@ -1,0 +1,15 @@
+---
+- hosts: "{{ region }}"
+  connection: "local"
+  gather_facts: false
+
+  tasks:
+      
+  - name: "Terminate tagged EC2 instances"
+    ec2:
+      state: "absent"
+      region: "{{ region }}"
+      instance_ids: "{{ ec2_id }}"
+      wait: true
+    when: ec2_tag_Name == "{{ tag }}"
+    delegate_to: "localhost"

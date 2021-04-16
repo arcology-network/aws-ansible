@@ -1,0 +1,25 @@
+- hosts: tag_Name_Demo
+  name: confuguration play
+  user: ubuntu
+  become: true
+  gather_facts: true
+
+  tasks:
+    - name: Wait for system to become reachable
+      wait_for_connection:
+
+    - name: Print debug msg
+      debug:
+        msg: "Hello!"
+
+    - name: Ensure mount directory exists
+      file:
+        path: /data
+        state: directory
+        mode: 0755
+
+    - name: Create file system
+      filesystem: fstype=ext4 dev=/dev/xvdf force=no
+
+    - name: Configure mount point
+      mount: name=/data src=/dev/xvdf fstype=ext4 state=mounted

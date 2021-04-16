@@ -1,0 +1,170 @@
+- hosts: localhost
+  gather_facts: False
+  vars:
+    vpcname: My VPC
+    vpc_cidr_block: "10.0.0.0/16"
+    vpc_public_subnet_cidr: "10.0.0.0/24"
+    keyname: ansible-key
+
+  tasks:
+    - name: Include secret
+      include_vars: secret.yml
+
+    - name: Create AWS VPC
+      ec2_vpc_net:
+        name: "{{ vpcname }}"
+        cidr_block: "{{ vpc_cidr_block }}"
+        region: "{{ region }}"
+        aws_access_key: "{{ ec2_access_key }}"
+        aws_secret_key: "{{ ec2_secret_key }}"
+        state: present
+      register: myvpc
+
+    - name: Create Public Subnet in VPC
+      ec2_vpc_subnet:
+        vpc_id: "{{ myvpc.vpc.id }}"
+        cidr: "{{ vpc_public_subnet_cidr }}"
+        region: "{{ region }}"
+        az: "{{ aws_zone }}"
+        aws_access_key: "{{ ec2_access_key }}"
+        aws_secret_key: "{{ ec2_secret_key }}"
+        state: present
+        tags:
+          Name: Public Subnet
+      register: my_public_subnet
+
+    - name: Create Internet Gateway
+      ec2_vpc_igw:
+        vpc_id: "{{ myvpc.vpc.id }}"
+        region: "{{ region }}"
+        aws_access_key: "{{ ec2_access_key }}"
+        aws_secret_key: "{{ ec2_secret_key }}"
+        state: present
+      register: myigw
+
+    - name: Create Route Table for Public Subnet
+      ec2_vpc_route_table:
+        vpc_id: "{{ myvpc.vpc.id }}"
+        region: "{{ region }}"
+        routes:
+          - dest: 0.0.0.0/0
+            gateway_id: "{{ myigw.gateway_id }}"
+        subnets:
+          - "{{ my_public_subnet.subnet.id }}"
+        aws_access_key: "{{ ec2_access_key }}"
+        aws_secret_key: "{{ ec2_secret_key }}"
+        tags:
+          Name: Public Subnet Route Table
+
+    - name: Create a new security group
+      ec2_group:
+        name: "ansible-sec-group"
+        description: "New SG for Ansible created instances"
+        region: "{{ region }}"
+        vpc_id: "{{ myvpc.vpc.id }}"
+        rules:
+          - proto: "tcp"
+            from_port: 22
+            to_port: 22
+            cidr_ip: "0.0.0.0/0"
+          - proto: "tcp"
+            from_port: 19001
+            to_port: 19001
+            cidr_ip: "0.0.0.0/0"
+          - proto: "tcp"
+            from_port: 36656
+            to_port: 36656
+            cidr_ip: "0.0.0.0/0"
+          - proto: "tcp"
+            from_port: 26656
+            to_port: 26656
+            cidr_ip: "0.0.0.0/0" 
+          - proto: "tcp"
+            from_port: 8080
+            to_port: 8080
+            cidr_ip: "0.0.0.0/0"
+          - proto: "all"
+            cidr_ip: "10.0.0.0/16"
+        rules_egress:
+          - proto: "all"
+            cidr_ip: "0.0.0.0/0"
+      register: secgrp
+   
+    - name: Provision a set of instances
+      ec2:
+         aws_access_key: "{{ ec2_access_key }}"
+         aws_secret_key: "{{ ec2_secret_key }}"
+         region: "{{ region }}"
+         group_id: "{{ secgrp.group_id }}"
+         vpc_subnet_id: "{{ my_public_subnet.subnet.id }}"
+         key_name: "{{ keyname }}"
+         instance_type: "{{ instance_type }}"
+         image: "{{ image }}"
+         wait: true
+         exact_count: "{{ count }}"
+         count_tag:
+            Name: "{{ tag }}"
+         instance_tags:
+            Name: "{{ tag }}"
+         assign_public_ip: yes
+      register: ec2
+
+      #    - name: Allocate Elastic IP and associate it with an instance
+      #      ec2_eip:
+      #        device_id: "{{ item }}"
+      #        aws_access_key: "{{ ec2_access_key }}"
+      #        aws_secret_key: "{{ ec2_secret_key }}"
+      #        region: "{{ region }}"
+      #        release_on_disassociation: yes
+      #        reuse_existing_ip_allowed: yes
+      #        in_vpc: yes
+      #      with_items: "{{ ec2.instance_ids }}"
+      #      register: elastic_ip
+
+    - name: Create EBS volume and attach to instances
+      ec2_vol:
+        aws_access_key: "{{ ec2_access_key }}"
+        aws_secret_key: "{{ ec2_secret_key }}"
+        region: "{{ region }}"
+        instance: "{{ item }}"
+        volume_size: "{{ volume_size }}"
+        device_name: /dev/xvdf
+        delete_on_termination: yes
+      with_items: "{{ ec2.instance_ids }}"
+      register: ec2_vol
+
+    - name: Print ec2.instances
+      debug:
+        msg: "ip = {{ item.public_ip }}"
+      with_items:
+        - "{{ ec2.instances }}"
+    - name: Add all instance public IPs to host group
+      add_host: hostname={{ item.public_ip }} groups=ec2hosts
+      with_items:
+        - "{{ ec2.instances }}"
+
+- hosts: ec2hosts
+  name: confuguration play
+  user: ubuntu
+  become: true
+  gather_facts: no
+
+  tasks:
+    - name: Wait for system to become reachable
+      wait_for_connection:
+
+    - name: Print debug msg
+      debug:
+        msg: "Hello!"
+
+    - name: Ensure mount directory exists
+      file:
+        path: "{{ mount_point }}"
+        state: directory
+        mode: 0755
+
+    - name: Create file system
+      filesystem: fstype=ext4 dev=/dev/nvme1n1 force=no
+
+    - name: Configure mount point
+      mount: name="{{ mount_point }}"  src=/dev/nvme1n1 fstype=ext4 state=mounted

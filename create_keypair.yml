@@ -1,0 +1,18 @@
+- hosts: localhost
+  gather_facts: false
+  vars:
+    keyname: ansible-key
+  tasks:
+
+    - name: Create Key Pair
+      ec2_key:
+        name: "{{ keyname }}"
+        region: "{{ region }}"
+      register: ec2_key
+
+    - name: Save private key
+      copy:
+        content: "{{ ec2_key.key.private_key }}"
+        dest: "~/.ssh/{{ region }}-private.pem"
+        mode: 0600
+      when: ec2_key.changed
