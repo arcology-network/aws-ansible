@@ -2,7 +2,7 @@
 
 The tools and libraries to start hosting machines on aws cloud.
 
-## 1. Preperation
+## 1. **Preparation**
 
 ### 1.1. AWS Preperation
 
@@ -12,7 +12,6 @@ The tools and libraries to start hosting machines on aws cloud.
 * Save access key in secret.yml in the same directory as the other scripts like this：
 
 ```yaml
----
 ec2_access_key: THISISYOURACCESSKEY
 ec2_secret_key: ThisIsYourSecretKey
 ```
@@ -24,13 +23,14 @@ ec2_secret_key: ThisIsYourSecretKey
 * Use pip to install ansible, boto and boto3 python libraries;
 * Install awscli and login with your AWS account;
 * Use ansible-vault to encrypt your secret.yml, save your vault's password in a file named **vault** in the same directory as the other scripts.
-> A snapshot of the directory structure
 
-## 2. Create EC2 Instances
+### 1.3. Installation Process
+
+![alt text](img/installation-process.svg)
+
+## 2. **Create EC2 Instances**
 
 Currently AWS imposes a limit on number of vCPU for On-Demand instances, so you may need to request limit increase.  
-
-
 
 ### 2.1. Edit instances.yml
 
@@ -123,7 +123,9 @@ node_cfg:
     mount_point: /data
     tag: scheduling-svc_frontend-svcs
 ```
+
 ### 2.2. Create EC2 Instances with setup.py
+
 Run setup.py to create EC2 instances according to the configuration info in instances.yml.
 
 ```shell
@@ -138,13 +140,14 @@ After running setup.py successfully, use ec2.py to get the information of all th
 $ ec2.py > host.json
 ```
 
-## 3. Setup Basic Runtime Environment.
+## 3. **Setup Basic Runtime Environment**
 
 use genhosts.py create configuration file for setup basic runtime environment.
 
 ```shell
 $ python3 genhosts.py host.json ubuntu ../env/envs
 ```
+
 > Extract Login info ?
 
 - ubuntu        ---  login account name
@@ -153,13 +156,12 @@ $ python3 genhosts.py host.json ubuntu ../env/envs
 
 run script to setup basic runtime environment
 
-
 ```shell
 $ cd ../env
 $ ansible-playbook -i envs install.yml
 ```
 
-## 4. Install and Start the Testnet.
+## 4. **Install and Start the Testnet**
 
 use genhosts.py create configuration file for setup testnet.
 
