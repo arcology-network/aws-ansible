@@ -44,33 +44,28 @@ Run setup.py to create EC2 instances according to the configuration info in inst
 $ setup.py
 ```
 
-### 2.3. Get List of EC2 Instance
+### 2.3. Get the EC2 Instance Info
 
-After running setup.py successfully, use ec2.py to get the information of all the EC2 instances. Output the information to host.json, this file will be used in the following installation scripts.
+After running setup.py successfully, use ec2.py to get the information of all the EC2 instances. Output the information to the host.json, this file will be used in the following installation scripts.
 
 ```shell
 $ ec2.py > host.json
 ```
 
-## 3. **Setup Basic Runtime Environment**
+## 3. Get the Runtime Environment Configuration
 
 use genhosts.py create configuration file for setup basic runtime environment.
 
 ```shell
-$ python3 genhosts.py host.json ubuntu ../env/envs
-```
-- ubuntu        ---  login account name
-- ../env/envs  --- configuration file
-
-
-run script to setup basic runtime environment
-
-```shell
-$ cd ../env
-$ ansible-playbook -i envs install.yml
+$ python3 genhosts.py host.json ubuntu ../env/login.txt
 ```
 
-## 4. **Install and Start the Testnet**
+| Field            | Description        |
+| ---------------- | ------------------ |
+| ubuntu           | login user name    |
+| ../env/login.txt | configuration file |
+
+## 4. Get the Testnet Configuration File
 
 use genhosts.py create configuration file for setup testnet.
 
@@ -78,15 +73,12 @@ use genhosts.py create configuration file for setup testnet.
 $ python3 gentestnet.py host.json ubuntu ../cluster/testnet.json 50000 testnet 2 4 /data
 ```
 
-- ubuntu                                ---  login account name
-- ../cluster/testnet.json       --- configuration file
-- 50000                                  --- max txs of per block
-- 2                                           --- node nums of cluster
-- 4                                           --- concurrency
-- /data                                    --- remote path
-
-```shell
-$ cd ../cluster
-$ python3 svcsInstaller.py restart testnet.json 4 5000000 -sshkey 
-```
-
+| Field                   | Description          |
+| ----------------------- | -------------------- |
+| ubuntu                  | login user name      |
+| ../cluster/testnet.json | configuration file   |
+| 50000                   | max txs of per block |
+| testnet                 | testnet name         |
+| 2                       | node nums of cluster |
+| 4                       | concurrency          |
+| /data                   | remote path          |

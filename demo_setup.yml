@@ -68,6 +68,10 @@
             to_port: 22
             cidr_ip: "0.0.0.0/0"
           - proto: "tcp"
+            from_port: 32768
+            to_port: 32768
+            cidr_ip: "0.0.0.0/0"
+          - proto: "tcp"
             from_port: 19001
             to_port: 19001
             cidr_ip: "0.0.0.0/0"
