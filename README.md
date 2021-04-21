@@ -24,13 +24,13 @@ ec2_secret_key: ThisIsYourSecretKey
 * Install awscli and login with your AWS account;
 * Use ansible-vault to encrypt your secret.yml, save your vault's password in a file named **vault** in the same directory as the other scripts.
 
-### 1.3. Installation Process
+### 1.3. Installation Workflow
 
-![alt text](img/installation-process.svg)
+![alt text](img/aws-ansible-installation.svg)
 
 ## 2. Create EC2 Instances
 
-Currently AWS imposes a limit on number of vCPU for On-Demand instances, so you may need to request limit increase.  
+>Currently AWS imposes a limit on maximum number of vCPU for On-Demand instances, so you may need to request limit increase.  
 
 ### 2.1. Edit instances.yml
 
@@ -44,15 +44,15 @@ Run setup.py to create EC2 instances according to the configuration info in inst
 $ setup.py
 ```
 
-### 2.3. Get the EC2 Instance Info
+### 2.3. Get EC2 Instances
 
-After running setup.py successfully, use ec2.py to get the information of all the EC2 instances. Output the information to the host.json, this file will be used in the following installation scripts.
+After running setup.py successfully, use ec2.py to get the information of all the EC2 instances created. Output the information to host.json, this file will be used in the following installation scripts.
 
 ```shell
 $ ec2.py > host.json
 ```
 
-## 3. Get the Runtime Environment Configuration
+## 3. Get Runtime Environment Configuration
 
 use genhosts.py create configuration file for setup basic runtime environment.
 
@@ -65,7 +65,7 @@ $ python3 genhosts.py host.json ubuntu ../env/login.txt
 | ubuntu           | login user name    |
 | ../env/login.txt | configuration file |
 
-## 4. Get the Testnet Configuration File
+## 4. Get Testnet Configuration
 
 use genhosts.py create configuration file for setup testnet.
 
@@ -80,5 +80,5 @@ $ python3 gentestnet.py host.json ubuntu ../cluster/testnet.json 50000 testnet 2
 | 50000                   | max txs of per block |
 | testnet                 | testnet name         |
 | 2                       | node nums of cluster |
-| 4                       | concurrency          |
+| 4                       | eu nums in per exec-svc          |
 | /data                   | remote path          |
