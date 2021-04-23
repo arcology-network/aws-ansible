@@ -70,7 +70,7 @@ $ python3 genhosts.py host.json ubuntu ../env/login.txt
 use genhosts.py create configuration file for setup testnet.
 
 ```shell
-$ python3 gentestnet.py host.json ubuntu ../cluster/testnet.json 50000 testnet 2 4 /data
+$ python3 gentestnet.py host.json ubuntu ../cluster/testnet.json 50000 testnet 4 /data
 ```
 
 | Field                   | Description          |
@@ -79,6 +79,5 @@ $ python3 gentestnet.py host.json ubuntu ../cluster/testnet.json 50000 testnet 2
 | ../cluster/testnet.json | configuration file   |
 | 50000                   | max txs of per block |
 | testnet                 | testnet name         |
-| 2                       | node nums of cluster |
-| 4                       | eu nums in per exec-svc          |
-| /data                   | remote path          |
+| 4                      | eu nums in per exec-svc |
+| /data                  | remote path |

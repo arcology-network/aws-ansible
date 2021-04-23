@@ -39,7 +39,8 @@ with open(hostfile, 'w') as f:
     f.write('[envs]\n')
     for line in all:
         f.write(line)
-
+    
+    ammolite_tag = ammolite_tag.replace('_','-')
     f.write('['+ ammolite_tag +']\n')
     for line in ammolite:
         f.write(line)

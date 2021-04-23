@@ -3,7 +3,6 @@ import json
 import os
 
 hosts = []
-tag2ips = {}
 mqs = []
 mqs2 = []
 
@@ -11,26 +10,51 @@ user = sys.argv[2]
 confile = sys.argv[3]
 rpm = sys.argv[4]
 netname = sys.argv[5]
-num = int(sys.argv[6])
-concurrency = sys.argv[7]
-mount_point = sys.argv[8]
-
-insids = []
-for idx in range(0,num):
-    insids.append(1)
+concurrency = sys.argv[6]
+mount_point = sys.argv[7]
 
 idx_host = 1
 with open(sys.argv[1], 'r') as f:
     data = f.read()
     dict = json.loads(data)
+
+    reg2tag2ips = {}
     for tag, ips in dict.items():
         if tag.startswith('tag_Name_'):
-            tag2ips[tag[len('tag_Name_'):].lower()] = ips
-            
+            tags = tag[len('tag_Name_'):].lower()
+            for ip in ips:
+                reg = dict['_meta']['hostvars'][ip]['ec2_region']
+
+                tag2ips = {}
+                if len(reg2tag2ips)>0 and reg in reg2tag2ips:
+                    tag2ips = reg2tag2ips[reg]
+
+                if len(tag2ips)>0 and tags in tag2ips:
+                    tag2ips[tags].append(ip)
+                else:
+                    ipp = []
+                    ipp.append(ip)
+                    tag2ips[tags] = ipp
+
+                reg2tag2ips[reg] = tag2ips
+    
+    for reg, tag22ips in reg2tag2ips.items():
+        nodenums = 1
+        for tags,ips in tag22ips.items():
+            if tags.find('core_svc') >= 0:
+                nodenums = len(ips)
+                break
+
+        insids = []
+        for idx in range(0,nodenums):
+            insids.append(1)
+
+        for tags,ips in tag22ips.items():
             ipsnum = len(ips)
-            step = ipsnum / num
+            step = ipsnum / nodenums
             idx_node = 0
             idx_step = 0 
+
             for ip in ips:
                 ci = {}
                 ci['ip'] = ip
@@ -75,7 +99,8 @@ with open(sys.argv[1], 'r') as f:
                     ci['insid'] = 0
                 hosts.append(ci)
 
-print(tag2ips)
+    print(reg2tag2ips)
+    
 print(hosts)
 
 
@@ -103,7 +128,6 @@ for h in hosts:
     host['nname'] = h['nname']
     host['nthread'] = concurrency
     host['insid'] = str(h['insid'])
-    #host['remotepath'] = '/home/'+ user +'/'
     host['remotepath'] = mount_point + '/'
     host['kafka'] = h['kafka']
     host['svcs'] = h['tag'].split('_')
