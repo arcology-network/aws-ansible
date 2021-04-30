@@ -9,8 +9,15 @@ with open(sys.argv[1], 'r') as f:
     dict = json.loads(data)
     for tag, ips in dict.items():
         if tag.startswith('tag_Name_'):
-            tag2ips[tag[len('tag_Name_'):].lower()] = ips
+            sub_tag = tag[len('tag_Name_'):].lower()
+            sub_tag = sub_tag[sub_tag.find('_') + 1:]
             for ip in ips:
+                if sub_tag in tag2ips:
+                    tag2ips[sub_tag].append(ip)
+                else:
+                    ipps = []
+                    ipps.append(ip)
+                    tag2ips[sub_tag] = ipps
                 ip2region[ip] = dict['_meta']['hostvars'][ip]['ec2_region']
 
 print(tag2ips)
@@ -26,7 +33,6 @@ ammolite_tag = ""
 
 with open(hostfile, 'w') as f:
     for tag, ips in tag2ips.items():
-        #f.write('['+tag+']\n')
         for ip in ips:
             line = ip+' ansible_ssh_user='+ user +' ansible_ssh_private_key_file=~/.ssh/'+ip2region[ip]+'-private.pem ansible_python_interpreter=/usr/bin/python3\n'
             all.append(line)
@@ -41,7 +47,8 @@ with open(hostfile, 'w') as f:
         f.write(line)
     
     ammolite_tag = ammolite_tag.replace('_','-')
-    f.write('['+ ammolite_tag +']\n')
+    if len(ammolite_tag)>0:
+        f.write('['+ ammolite_tag +']\n')
     for line in ammolite:
         f.write(line)
     
@@ -53,7 +60,7 @@ with open(hostfile, 'w') as f:
     f.write('host_key_checking = False\n')
     f.write('ansible_port=22\n')
     f.write('ansible_ssh_port=22\n')
-    f.write('forks=5\n')
+    f.write('forks=15\n')
 
 ammolite_ips = {}
 

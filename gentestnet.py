@@ -2,9 +2,8 @@ import sys
 import json
 import os
 
-hosts = []
-mqs = []
-mqs2 = []
+
+
 
 user = sys.argv[2]
 confile = sys.argv[3]
@@ -13,126 +12,126 @@ netname = sys.argv[5]
 concurrency = sys.argv[6]
 mount_point = sys.argv[7]
 
+
+
 idx_host = 1
 with open(sys.argv[1], 'r') as f:
     data = f.read()
     dict = json.loads(data)
 
-    reg2tag2ips = {}
+    #nodes = {
+    #           tags:[{idx:0,tag:x,ips:x}]
+    #           ka:x,
+    #           ka2:x,
+    #           zk:x
+    # }
+    nodes = {}
     for tag, ips in dict.items():
         if tag.startswith('tag_Name_'):
-            tags = tag[len('tag_Name_'):].lower()
+            sub_tag = tag[len('tag_Name_'):].lower()
+            node_idx = sub_tag[:sub_tag.find('_')]
+            sub_tag = sub_tag[sub_tag.find('_') + 1:]
+            tag_item = {}
+            tag_item['idx'] = node_idx
+            tag_item['tag'] = sub_tag
+            tag_item['ips'] = ips
+
+            node = {}
+            if node_idx in nodes:
+                node = nodes[node_idx]
+            else:
+                node['tags']=[]
+            node['tags'].append(tag_item)
+            
             for ip in ips:
-                reg = dict['_meta']['hostvars'][ip]['ec2_region']
+                localip = dict['_meta']['hostvars'][ip]['ec2_private_ip_address']
+                node_tag = dict['_meta']['hostvars'][ip]['ec2_tag_Name'] 
+                node_tag = node_tag[node_tag.find('_') + 1:]
+                #print(node_tag)
+                if node_tag.startswith('kafka0'):
+                    node['ka'] = localip + ":9092"
+                    node['ka2'] = localip + ":9092"
+                    node['zk'] = localip + ":2181"
+                elif node_tag.startswith('kafka1'):
+                    node['ka'] = localip + ":9092"
+                elif node_tag.startswith('kafka2'):
+                    node['ka2'] = localip + ":9092"
+                    node['zk'] = localip + ":2181"
+            nodes[node_idx] = node
+            
+    hosts = []
+    insids = {}
+    idx_host = 1
 
-                tag2ips = {}
-                if len(reg2tag2ips)>0 and reg in reg2tag2ips:
-                    tag2ips = reg2tag2ips[reg]
+    print(nodes)
 
-                if len(tag2ips)>0 and tags in tag2ips:
-                    tag2ips[tags].append(ip)
-                else:
-                    ipp = []
-                    ipp.append(ip)
-                    tag2ips[tags] = ipp
-
-                reg2tag2ips[reg] = tag2ips
-    
-    for reg, tag22ips in reg2tag2ips.items():
-        nodenums = 1
-        for tags,ips in tag22ips.items():
-            if tags.find('core_svc') >= 0:
-                nodenums = len(ips)
-                break
-
-        insids = []
-        for idx in range(0,nodenums):
-            insids.append(1)
-
-        for tags,ips in tag22ips.items():
-            ipsnum = len(ips)
-            step = ipsnum / nodenums
-            idx_node = 0
-            idx_step = 0 
-
-            for ip in ips:
+    for node_id,node in nodes.items():
+        for tag in node['tags']:
+            for ip in tag['ips']:
                 ci = {}
                 ci['ip'] = ip
                 ci['region'] = dict['_meta']['hostvars'][ip]['ec2_region']
                 ci['localip'] = dict['_meta']['hostvars'][ip]['ec2_private_ip_address']
-                ci['tag'] = dict['_meta']['hostvars'][ip]['ec2_tag_Name']
-                
-                if ci['tag'].startswith('kafka0'):
-                    mqs.append(ci['localip']+":9092")
-                    mq = {}
-                    mq['ka']=ci['localip']+":9092"
-                    mq['zk']=ci['localip']+":2181"
-                    mqs2.append(mq)
-                elif ci['tag'].startswith('kafka1'):
-                    mqs.append(ci['localip']+":9092")
-                elif ci['tag'].startswith('kafka2'):
-                    mq = {}
-                    mq['ka']=ci['localip']+":9092"
-                    mq['zk']=ci['localip']+":2181"
-                    mqs2.append(mq)
+                host_tag =  dict['_meta']['hostvars'][ip]['ec2_tag_Name']
+                host_tag = host_tag[host_tag.find('_') + 1:]
+                ci['tag'] = host_tag
                 if ci['tag'].startswith('kafka'):
                     ci['kafka']="true"
                     ci['tag']=ci['tag'][len('kafka0_'):]
                 else:
                     ci['kafka']="false"
 
-                ci['name'] = 's'+str(idx_host)
+                ci['name'] = 's'+ str(idx_host)
                 idx_host = idx_host + 1
-
-                ci['nidx'] = idx_node
-                ci['nname'] = 'node'+str(idx_node)
-                idx_step = idx_step + 1
-
-                if idx_step == step :
-                    idx_node = idx_node + 1
-                    idx_step = 0
-                
+                ci['nidx'] = tag['idx']
+                ci['nname'] = 'node'+ tag['idx']
+               
+                ci['mqaddr'] = node['ka']
+                ci['mqaddr2'] = node['ka2']
+                ci['zkUrl'] = node['zk']
+          
                 if ci['tag'].find('exec-svc')>=0:
-                    ci['insid'] = insids[ci['nidx']]
-                    insids[ci['nidx']] = insids[ci['nidx']] + 1
+                    if tag['idx'] in insids:
+                        insids[tag['idx']] = insids[tag['idx']] + 1
+                        ci['insid'] = insids[tag['idx']]
+                    else:
+                        ci['insid'] = 1
+                        insids[tag['idx']] = 1
                 else:
                     ci['insid'] = 0
                 hosts.append(ci)
 
-    print(reg2tag2ips)
+
+
+    g_data = {}
+    g_data['name'] = netname
+    g_data['rpm'] = rpm
+    g_data['hosts'] = []
+    curHome = os.environ['HOME']
+
+    for h in hosts: 
+        host = {}
+        host['name'] = h['name']
+        host['ip'] = h['ip']
+        host['localip'] = h['localip']
+        host['username'] = user
+        host['password'] = curHome + '/.ssh/' + h['region'] + '-private.pem'
+            
+        host['mqaddr'] = h['mqaddr']
+
+        host['mqaddr2'] = h['mqaddr2']
+        host['zkUrl'] = h['zkUrl']
+
+        host['nidx'] = h['nidx']
+        host['nname'] = h['nname']
+        host['nthread'] = concurrency
+        host['insid'] = str(h['insid'])
+        host['remotepath'] = mount_point + '/'
+        host['kafka'] = h['kafka']
+        host['svcs'] = h['tag'].split('_')
+        g_data['hosts'].append(host)
     
-print(hosts)
-
-
-g_data = {}
-g_data['name'] = netname
-g_data['rpm'] = rpm
-g_data['hosts'] = []
-
-curHome = os.environ['HOME']
-
-for h in hosts: 
-    host = {}
-    host['name'] = h['name']
-    host['ip'] = h['ip']
-    host['localip'] = h['localip']
-    host['username'] = user
-    host['password'] = curHome + '/.ssh/' + h['region'] + '-private.pem'
     
-    host['mqaddr'] = mqs[h['nidx']]
-
-    host['mqaddr2'] = mqs2[h['nidx']]['ka']
-    host['zkUrl'] = mqs2[h['nidx']]['zk']
-
-    host['nidx'] = str(h['nidx'])
-    host['nname'] = h['nname']
-    host['nthread'] = concurrency
-    host['insid'] = str(h['insid'])
-    host['remotepath'] = mount_point + '/'
-    host['kafka'] = h['kafka']
-    host['svcs'] = h['tag'].split('_')
-    g_data['hosts'].append(host)
-
 with open(confile, 'w') as out_file:
     json.dump(g_data, out_file, indent=4)
 
