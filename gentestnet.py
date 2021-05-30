@@ -63,7 +63,7 @@ with open(sys.argv[1], 'r') as f:
     insids = {}
     idx_host = 1
 
-    print(nodes)
+    #print(nodes)
 
     for node_id,node in nodes.items():
         for tag in node['tags']:
@@ -135,6 +135,6 @@ with open(sys.argv[1], 'r') as f:
 with open(confile, 'w') as out_file:
     json.dump(g_data, out_file, indent=4)
 
-
+print('Testnet configuration file generated') 
 
 

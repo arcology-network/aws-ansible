@@ -49,7 +49,7 @@ node_cfg:
         instance_type: r5.4xlarge
         volume_size: 500
         mount_point: /data
-        tag: kafka0_storage-svc_pool-svc_exec-svc_scheduling-svc_frontend-svc
+        tag: kafka0_storage-svc_pool-svc_exec-svc_scheduling-svc_frontend-svc     
   - id: large
     insts: 
       - count: 1

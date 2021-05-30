@@ -1,14 +1,17 @@
 #!/usr/bin/env python3
+import sys
 import yaml
 import subprocess
 import multiprocessing
 import os
+from rich.progress import Progress
 
-def start_instance_wrapper(jobs):
+
+def start_instance_wrapper(jobs,progress,task):
     for job in jobs:
-        start_instance(job['ev'], job['log_file'], job['key_file'])
+        start_instance(job['ev'], job['log_file'], job['key_file'],progress,task)
 
-def start_instance(ev, log_file, key_file):
+def start_instance(ev, log_file, key_file,progress,task):
     with open(log_file, 'w+') as out:
         args = ['/usr/bin/ansible-playbook', 
                 '--vault-password-file', os.getcwd()+'/vault',
@@ -16,40 +19,37 @@ def start_instance(ev, log_file, key_file):
                 'demo_setup.yml',
                 '--key-file', key_file,
                 '-e', ev]
+                
         rv  = subprocess.call(
                 args, env={'ANSIBLE_HOST_KEY_CHECKING':'false'}, 
                 stdout=out, stderr=out)
+        
+        
         if rv == 0:
-            print('Finish job:', ev)
+            print('Instance created:', ev)
         else:
-            print('Job', ev, 'FAILED, see log:', log_file)
+            print('Instance ', ev, 'FAILED, see log:', log_file)
+        progress.update(task, advance=1)
 
-with open("instances.yml", 'r') as stream:
+with open(sys.argv[1], 'r') as stream:
     try:
         cfg = yaml.safe_load(stream)
-        jobs_list = []
+        
         idx = 0
-
+        
         tags = {}
         nodes = {}
+        
+        
+
         for group in cfg['node_cfg']:
             nodes[group['id']] = group
-            for inst in group['insts']:
-                if inst['tag'] in tags:
-                    tags[inst['tag']] = tags[inst['tag']] + 1
-                else:
-                    tags[inst['tag']] = 1
-        repetition = 0
-        for tag,num in tags.items():
-            if num>1:
-                print(' tag [' + tag + '] is reduplicative!')
-                repetition = repetition + 1
-        if repetition>0:
-            raise Exception("found tag is reduplicative!")
+
+        jobs = []
         node_idx = 0 
         for region in cfg['regions']:
             for node_key in region['node_list']:
-                jobs = []
+                
                 for inst in nodes[node_key]['insts']:
                     ev = "region=" + region['region'] + \
                         " aws_zone=" + region['zone'] + \
@@ -65,12 +65,13 @@ with open("instances.yml", 'r') as stream:
                     args['key_file'] = "~/.ssh/" + region['region'] + "-private.pem"
                     jobs.append(args)
                     idx = idx + 1
-                jobs_list.append(jobs)
                 node_idx = node_idx +1
 
-        print(jobs_list)
-        pool = multiprocessing.Pool(processes=16)
-        pool.map(start_instance_wrapper, jobs_list)
+        with Progress() as progress:
+            task = progress.add_task("Creating instances ...", total=len(jobs))
+
+            for job in jobs:
+                start_instance(job['ev'], job['log_file'], job['key_file'],progress,task)
     except yaml.YAMLError as exc:
         print(exc)
 

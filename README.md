@@ -41,7 +41,7 @@ The instances.yml contains region and type information regrading hosting instanc
 Run setup.py to create EC2 instances according to the configuration info in instances.yml.
 
 ```shell
-$ setup.py
+$ python setup.py instances.yml
 ```
 
 ### 2.3. Get EC2 Instances
@@ -49,7 +49,7 @@ $ setup.py
 After running setup.py successfully, use ec2.py to get the information of all the EC2 instances created. Output the information to host.json, this file will be used in the following installation scripts.
 
 ```shell
-$ ec2.py > host.json
+$ python ec2.py > host.json
 ```
 
 ## 3. Get Runtime Environment Configuration
