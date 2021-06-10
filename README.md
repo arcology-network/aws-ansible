@@ -30,11 +30,13 @@ ec2_secret_key: ThisIsYourSecretKey
 
 ## 2. Create EC2 Instances
 
->Currently AWS imposes a limit on maximum number of vCPU for On-Demand instances, so you may need to request limit increase.  
+
+
+>Currently AWS imposes a limit on maximum number of vCPU for On-Demand instances, so you may need to request a limit increase.  
 
 ### 2.1. Edit instances.yml
 
-The instances.yml contains region and type information regrading hosting instances on AWS.
+The instances.yml contains region and type information regrading hosting instances on AWS. Please refer to this [document](./how-to-configure-aws-instances.md) on how to edit the configuration file.
 
 ### 2.2. Create EC2 Instances with setup.py
 
