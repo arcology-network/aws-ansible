@@ -4,19 +4,20 @@
   - [1. Dynamic Testnet](#1-dynamic-testnet)
     - [1.1. Pros](#11-pros)
     - [1.2. Cons](#12-cons)
-  - [2. Configuration](#2-configuration)
-  - [3. testnet.json](#3-testnetjson)
-    - [3.1. Example for testnet.json](#31-example-for-testnetjson)
-      - [3.2. Regions and Zones](#32-regions-and-zones)
-      - [3.3. node_cfg](#33-node_cfg)
-      - [3.3.1. Instance Configuration](#331-instance-configuration)
-    - [3.2. Anther Example](#32-anther-example)
+  - [2. testnet.json](#2-testnetjson)
+    - [2.1. Example for testnet.json](#21-example-for-testnetjson)
+      - [2.1.1. Regions and Zones](#211-regions-and-zones)
+      - [2.1.2. node_cfg](#212-node_cfg)
+      - [2.1.3. Instance Configuration](#213-instance-configuration)
+    - [2.2. Anther Example](#22-anther-example)
   
 Arcology is a complex system with a lot of moving parts. It has a number of services and these services have to communicate asynchronously with other internal services and external peers via network connections. Basically, an Arcology tesnet is a network of networks.
 
 ## 1. Dynamic Testnet
 
 An Arcology testnet usually involves in multiple machines, setting them up one by one manually is impractical sometimes. Therefore, Arcology testnet installer comes with tools to start a testnet on AWS **dynamically** on-demand.
+
+The installer scripts will take care of everything for the most part. The overall process is pretty automatic. But there are still a few configuration files user need to edit based on their own settings.
 
 ### 1.1. Pros
 
@@ -32,17 +33,13 @@ There is a steep learning curve. Starting a dynamic testnet requires the ablitie
 
 Instead of hardcoding the IP addresses directly into the installation scripts, there are tools to programmatically extract the instance information from AWS and then write it into the configuration file for installer to use. That is why we wrote some scripts to help with the whole process.
 
-## 2. Configuration
-
-The installer scripts will take care of everything for the most part. The overall process is pretty automatic. But there are still a few configuration files user need to edit based on their own settings.
-
-## 3. testnet.json
+## 2. testnet.json
 
 The testnet.json is the first one we need to edit. The testnet.yml helping the installer to find out the relationship between different machines and services AWS. The testnet is started dynamically, which means everytime we start a new testnet the machines will be different, so are their IPs. Thus we cannot simply write the IP inforamtion into a configuration file, we need to get it on the fly.
 
 What we can do is to specify the instance types and the what Arcology services need to install and then let AWS to assign the hosts. The testnet.json tells the relationship between instance types and the services.
 
-### 3.1. Example for testnet.json
+### 2.1. Example for testnet.json
 
 The sample configuration starts a testnet with two Arcology node clusters hosted in two AWS data center.  
 
@@ -120,7 +117,7 @@ node_cfg:                                                              # Configu
         services: kafka0_storage-svc_scheduling-svc_frontend-svc
 ```
 
-#### 3.2. Regions and Zones
+#### 2.1.1. Regions and Zones
 
 Users needs to specify the data centers where the testnet will be hosted. There can be multiple data center involved.
 Apart from the data center, users also need to indicate what the of node cluster they want in the node_cluster_list field,
@@ -136,7 +133,7 @@ The configuraiton above bascially tells the installer to create a "min" cluster 
 
 For example, we can have `node_list: [min, min, min, min]` to create 4 "min" clusters in the same data center.
 
-#### 3.3. node_cfg
+#### 2.1.2. node_cfg
 
 The node_cfg section contains the hardware configuration for each cluster type what services users want to install.
 
@@ -167,7 +164,7 @@ instances:
         services: [kafka0,storage-svc,pool-svc,exec-svc,scheduling-svc,frontend-svc]
 ```
 
-#### 3.3.1. Instance Configuration
+#### 2.1.3. Instance Configuration
 
 There is not limit on the number of hosts we can have but, but we still need at least on instance for all these services.
 
@@ -181,9 +178,9 @@ There is not limit on the number of hosts we can have but, but we still need at 
 
 Bascially, what it says is to start a [r5.xlarge](https://aws.amazon.com/ec2/instance-types/r5/) instance with 100G of extra storage space mounted under /data folder and then install the [ammolite-docker](https://github.com/arcology-network/ammolite) on it.
 
-### 3.2. Anther Example
+### 2.2. Anther Example
 
-It is perfectly possible to run everything on a single machine. The configuration file below starts a single-host cluster with all the services deployed.
+It is perfectly possible to run everything on a single machine. The configuration file below starts a single host cluster with all the services deployed on one machine.
 
 ```yml
 dmi_ids:                                                              # AWS data centers
@@ -214,4 +211,4 @@ node_cfg:                                                              # Configu
         instance_type: r5.xlarge
         volume_size: 500
         mount_point: /data
-        services:  [exec-svc,consensus-svc,rbitrator-svc,ppt-svc,client-svc,kafka0,storage-svc,pool-svc,exec-svc,scheduling-svc,frontend-svc,core-svc,eshing-svc,generic-hashing-svc,ppt-svc,client-svc]
+        services:  [exec-svc,consensus-svc,rbitrator-svc,ppt-svc,client-svc,kafka0,storage-svc,pool-svc,exec-svc,scheduling-svc,frontend-svc,core-svc,eshing-svc,generic-hashing-svc,ppt-svc,client-svc]   # All the services
