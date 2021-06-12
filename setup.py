@@ -19,7 +19,7 @@ def start_instance(ev, log_file, key_file,progress,task):
                 'demo_setup.yml',
                 '--key-file', key_file,
                 '-e', ev]
-                
+                 
         rv  = subprocess.call(
                 args, env={'ANSIBLE_HOST_KEY_CHECKING':'false'}, 
                 stdout=out, stderr=out)
@@ -30,6 +30,7 @@ def start_instance(ev, log_file, key_file,progress,task):
         else:
             print('Instance ', ev, 'FAILED, see log:', log_file)
         progress.update(task, advance=1)
+        
 
 with open(sys.argv[1], 'r') as stream:
     try:
@@ -48,9 +49,11 @@ with open(sys.argv[1], 'r') as stream:
         jobs = []
         node_idx = 0 
         for region in cfg['regions']:
-            for node_key in region['node_list']:
-                
-                for inst in nodes[node_key]['insts']:
+            for node_key in region['node_cluser_list']:
+                for inst in nodes[node_key]['instances']:
+                    tag = str(node_idx)
+                    for service in inst['services']:
+                        tag = tag+ '_' + service
                     ev = "region=" + region['region'] + \
                         " aws_zone=" + region['zone'] + \
                         " image=" + cfg['dmi_ids'][region['region']] + \
@@ -58,7 +61,7 @@ with open(sys.argv[1], 'r') as stream:
                         " instance_type=" + inst['instance_type'] + \
                         " volume_size=" + str(inst['volume_size']) + \
                         " mount_point=" + inst['mount_point'] + \
-                        " tag=" + str(node_idx) + '_' +inst['tag']
+                        " tag=" + tag
                     args = {}
                     args['ev'] = ev
                     args['log_file'] = "./logs/" + region['region'] + "_"+str(idx) + ".log"
