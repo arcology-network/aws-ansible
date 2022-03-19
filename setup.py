@@ -6,31 +6,32 @@ import multiprocessing
 import os
 from rich.progress import Progress
 
+def print_output(result):  
+  if result!=b'':
+    print(result)
 
-def start_instance_wrapper(jobs,progress,task):
-    for job in jobs:
-        start_instance(job['ev'], job['log_file'], job['key_file'],progress,task)
 
-def start_instance(ev, log_file, key_file,progress,task):
-    with open(log_file, 'w+') as out:
-        args = ['/usr/bin/ansible-playbook', 
-                '--vault-password-file', os.getcwd()+'/vault',
-                '-e', 'ansible_python_interpreter=/usr/bin/python3',
-                'demo_setup.yml',
-                '--key-file', key_file,
-                '-e', ev]
-                 
-        rv  = subprocess.call(
-                args, env={'ANSIBLE_HOST_KEY_CHECKING':'false'}, 
-                stdout=out, stderr=out)
-        
-        
-        if rv == 0:
-            print('Instance created:', ev)
-        else:
-            print('Instance ', ev, 'FAILED, see log:', log_file)
-        progress.update(task, advance=1)
-        
+def create_instance(ev,logfile, key_file):
+    cmds='ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook --vault-password-file '+ os.getcwd()+'/vault -e ansible_python_interpreter=/usr/bin/python3 demo_setup.yml --key-file '+ key_file +' -e "'+ev+'" >'+ logfile +' 2>&1'
+    return cmds
+
+def createShell(shfile,commands,jobs):
+    with open(shfile, 'w') as f:
+        f.write('#!/bin/sh\n')
+        f.write('date\n')
+        idx=0
+        for cmd in commands:
+            f.write('{\n')
+            f.write('  '+cmd+'\n')
+            f.write('  if [ $? -eq 0 ]; then\n')
+            f.write('    echo "Instance created:['+jobs[idx]['ev'] +']"\n')
+            f.write('  else\n')
+            f.write('    echo "Instance ['+jobs[idx]['ev'] +'] FAILED, see log:'+jobs[idx]['log_file'] +'"\n')
+            f.write('  fi\n')
+            f.write('} &\n')
+            idx=idx+1
+        f.write('wait\n') 
+        f.write('date\n')    
 
 with open(sys.argv[1], 'r') as stream:
     try:
@@ -38,7 +39,6 @@ with open(sys.argv[1], 'r') as stream:
         
         idx = 0
         
-        tags = {}
         nodes = {}
         
         
@@ -48,12 +48,15 @@ with open(sys.argv[1], 'r') as stream:
 
         jobs = []
         node_idx = 0 
+
+        #if len(sys.argv)==4:
+        #    node_idx=int(sys.argv[3])
+        
+        
         for region in cfg['regions']:
             for node_key in region['node_cluser_list']:
                 for inst in nodes[node_key]['instances']:
                     tag = str(node_idx)
-                    for service in inst['services']:
-                        tag = tag+ '_' + service
                     ev = "region=" + region['region'] + \
                         " aws_zone=" + region['zone'] + \
                         " image=" + cfg['dmi_ids'][region['region']] + \
@@ -61,7 +64,8 @@ with open(sys.argv[1], 'r') as stream:
                         " instance_type=" + inst['instance_type'] + \
                         " volume_size=" + str(inst['volume_size']) + \
                         " mount_point=" + inst['mount_point'] + \
-                        " tag=" + tag
+                        " tag=" + tag +"_"+ inst['tag']
+                    
                     args = {}
                     args['ev'] = ev
                     args['log_file'] = "./logs/" + region['region'] + "_"+str(idx) + ".log"
@@ -70,13 +74,22 @@ with open(sys.argv[1], 'r') as stream:
                     idx = idx + 1
                 node_idx = node_idx +1
 
-        with Progress() as progress:
-            task = progress.add_task("Creating instances ...", total=len(jobs))
+        commands=[]
+        for job in jobs:
+            commands.append(create_instance(job['ev'], job['log_file'], job['key_file']))
+        #print(commands)
 
-            for job in jobs:
-                start_instance(job['ev'], job['log_file'], job['key_file'],progress,task)
+        shname=sys.argv[3]
+        createShell(shname,commands,jobs)
+
     except yaml.YAMLError as exc:
         print(exc)
 
+destpath=sys.argv[2]
+result =subprocess.check_output(["mkdir -p "+destpath],shell=True, stderr=subprocess.STDOUT)
+print_output(result)
 
 
+allfilename=sys.argv[1]
+result =subprocess.check_output(["cp "+allfilename+" "+destpath+"/instances.yml"],shell=True, stderr=subprocess.STDOUT)
+print_output(result)

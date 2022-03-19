@@ -1,0 +1,24 @@
+[
+	{
+		"tag":"s1",
+		"svcs":[
+			"storage-svc",
+			"exec-svc",
+			"exec-svc-debug",
+			"arbitrator-svc",
+			"eshing-svc",
+			"tpp-svc",
+			"tpp-svc",
+			"scheduling-svc",
+			"generic-hashing-svc",
+			"gateway-svc",
+			"frontend-svc",
+			"core-svc",
+			"pool-svc",
+			"consensus-svc",
+			"eth-api-svc",
+			"ammolite-docker",
+			"kafka0"
+		]
+	}
+]

@@ -1,5 +1,7 @@
 import sys
 import json
+import os
+import shutil
 
 ip2region = {}
 tag2ips = {}
@@ -34,35 +36,19 @@ user = sys.argv[2]
 hostfile = sys.argv[3]
 ammolite_tag = ""
 
+envs = {}
+
 with open(hostfile, 'w') as f:
     for tag, ips in tag2ips.items():
         for ip in ips:
-            line = ip+' ansible_ssh_user='+ user +' node_idx='+ str(ip2node[ip]) +'  ansible_ssh_private_key_file=~/.ssh/'+ip2region[ip]+'-private.pem ansible_python_interpreter=/usr/bin/python3\n'
-            all.append(line)
-            if tag.startswith('ammolite'):
-                ammolite.append(line)
-                ammolite_tag = tag
-            if tag.startswith('kafka'):
-                kafka.append(line)
+            line = ip+' ansible_ssh_user='+ user +' node_idx='+ str(ip2node[ip]) +'  ansible_ssh_private_key_file=~/.ssh/'+ip2region[ip]+'-private.pem ansible_python_interpreter=/usr/bin/python3 base_path=/data/ \n'
+            nIdx=str(ip2node[ip])
+            lines=[]
+            if tag.startswith('pet'): 
+                all.append(line)
 
-    f.write('[envs]\n')
+    f.write('[docker]\n')
     for line in all:
         f.write(line)
-    
-    ammolite_tag = ammolite_tag.replace('_','-')
-    if len(ammolite_tag)>0:
-        f.write('['+ ammolite_tag +']\n')
-    for line in ammolite:
-        f.write(line)
-    
-    f.write('[kafka]\n')
-    for line in kafka:
-        f.write(line)
-    
-    f.write('[all:vars]\n')
-    f.write('host_key_checking = False\n')
-    f.write('ansible_port=22\n')
-    f.write('ansible_ssh_port=22\n')
-    f.write('forks=15\n')
 
-print('Login file generated')      
+print('host file generated')      

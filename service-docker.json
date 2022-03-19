@@ -1,0 +1,18 @@
+[
+	{
+		"tag":"s4",
+		"svcs":["ammolite-docker","exec-svc","consensus-svc","arbitrator-svc","eshing-svc","storage-svc","pool-svc","tpp-svc","scheduling-svc","frontend-svc","generic-hashing-svc","core-svc","gateway-svc","kafka0"]
+	},
+	{
+		"tag":"s1",
+		"svcs":[]
+	},
+	{
+		"tag":"s2",
+		"svcs":[]
+	},
+	{
+		"tag":"s3",
+		"svcs":[]
+	}
+]
