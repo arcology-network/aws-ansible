@@ -1,0 +1,10 @@
+
+- hosts: envs
+  name: confuguration play
+  user: ubuntu
+  become: true
+  gather_facts: no
+
+  tasks:
+      - name: mount dev
+        include_tasks: mount-dev.yml

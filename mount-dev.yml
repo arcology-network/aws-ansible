@@ -1,0 +1,20 @@
+
+---
+  - name: Wait for system to become reachable
+    wait_for_connection:
+
+  - name: Print debug msg
+    debug:
+      msg: "Hello!"
+
+  - name: Ensure mount directory exists
+    file:
+      path: "{{ mount_point }}"
+      state: directory
+      mode: 0755
+
+  - name: Create file system
+    filesystem: fstype=ext4 dev=/dev/nvme1n1 force=no
+
+  - name: Configure mount point
+    mount: name="{{ mount_point }}"  src=/dev/nvme1n1 fstype=ext4 state=mounted

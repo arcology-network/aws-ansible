@@ -1,0 +1,38 @@
+---
+dmi_ids:
+    eu-north-1: ami-04ec5f55f21fa091e 
+    ap-south-1: ami-02240fe5e8581a077
+    eu-west-3: ami-0f8e5edde3a79f541
+    eu-west-2: ami-0a5c9ebccc5a914b4
+    eu-west-1: ami-068064aad57b179f3
+    ap-northeast-2: ami-048d434559cc26206
+    ap-northeast-1: ami-04297bd23c488ac2d
+    sa-east-1: ami-0af5bbfe9a9157cfb
+    ca-central-1: ami-0a21034f235f66ffd
+    ap-southeast-1: ami-0e0436d1fd18d1122
+    ap-southeast-2: ami-0ea7af759a98f50c1
+    eu-central-1: ami-0a09486b18ca1a617
+    us-east-1: ami-0745d55d209ff6afd
+    us-east-2: ami-08541d54d54812a51
+    us-west-1: ami-0713bfb5ea0df48be
+    us-west-2: ami-01f398167e3bba7a0
+regions:
+  - region: us-east-1
+    zone: us-east-1a
+    node_cluser_list: [forcloud,forcloud2]
+    node_idx_start: 0
+node_cfg:
+  - id: forcloud
+    instances: 
+      - count: 1
+        instance_type: r5.xlarge
+        volume_size: 100
+        mount_point: /data
+        tag: s1
+  - id: forcloud2
+    instances: 
+      - count: 1
+        instance_type: r5.2xlarge
+        volume_size: 20
+        mount_point: /data
+        tag: s1    

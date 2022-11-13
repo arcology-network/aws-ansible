@@ -1,24 +1,22 @@
-[
-	{
-		"tag":"s1",
-		"svcs":[
-			"storage-svc",
-			"exec-svc",
-			"exec-svc-debug",
-			"arbitrator-svc",
-			"eshing-svc",
-			"tpp-svc",
-			"tpp-svc",
-			"scheduling-svc",
-			"generic-hashing-svc",
-			"gateway-svc",
-			"frontend-svc",
-			"core-svc",
-			"pool-svc",
-			"consensus-svc",
-			"eth-api-svc",
-			"ammolite-docker",
-			"kafka0"
-		]
-	}
-]
+{
+	"name":"mynet",
+	"chainid":1,
+	"concurrency":8,
+	"eus":32,
+	"user":"ubuntu",
+	"mount_point":"/data",
+	"ssh_port":"22",
+	"services":[
+		{
+			"tag":"s1",
+			"svcs":[
+				"frontend-svc",
+				"ammolite-docker",
+				"kafka-0"
+			],
+			"apps":[
+				"monaco"
+			]
+		}
+	]
+}

@@ -26,7 +26,7 @@ ec2_secret_key: ThisIsYourSecretKey
 
 ### 1.3. Installation Workflow
 
-![alt text](img/aws-ansible-installation.svg)
+![alt text](img/aws.png)
 
 ## 2. Create EC2 Instances
 
@@ -36,48 +36,25 @@ ec2_secret_key: ThisIsYourSecretKey
 
 The instances.yml contains region and type information regrading hosting instances on AWS.
 
-### 2.2. Create EC2 Instances with setup.py
+If EC2 Instances have created by spot,we could skip this step. 
 
-Run setup.py to create EC2 instances according to the configuration info in instances.yml.
+### 2.2.Edit services.json 
 
-```shell
-$ python setup.py instances.yml
-```
+The services.json contains services and logic module information per host.
 
-### 2.3. Get EC2 Instances
+### 2.3. Create EC2 Instances and testnet  Configuration
 
-After running setup.py successfully, use ec2.py to get the information of all the EC2 instances created. Output the information to host.json, this file will be used in the following installation scripts.
+Create EC2 instances according to the configuration info in instances.yml,or use spot instances by manually created to create testnet.json according to the configuration info in service.json.
 
 ```shell
-$ python ec2.py > host.json
+$ ./setup-aws.sh -i instances-1.7.yml -t ../cluster/testnet.json  -s service.json -b ../bak -q true
 ```
 
-## 3. Get Runtime Environment Configuration
+| Field              | Description           |
+| ------------------ | --------------------- |
+| i      | instances configure file       |
+| t             | testnet configuration file |
+| s | service configuration file |
+| b | tmp path  for bak |
+| q | spot mode |
 
-use genhosts.py create configuration file for setup basic runtime environment.
-
-```shell
-$ python3 genhosts.py host.json ubuntu ../env/login.txt
-```
-
-| Field            | Description        |
-| ---------------- | ------------------ |
-| ubuntu           | login user name    |
-| ../env/login.txt | configuration file |
-
-## 4. Get Testnet Configuration
-
-use genhosts.py create configuration file for setup testnet.
-
-```shell
-$ python3 gentestnet.py host.json ubuntu ../cluster/testnet.json 50000 testnet 4 /data
-```
-
-| Field                   | Description          |
-| ----------------------- | -------------------- |
-| ubuntu                  | login user name      |
-| ../cluster/testnet.json | configuration file   |
-| 50000                   | max txs of per block |
-| testnet                 | testnet name         |
-| 4                      | eu nums in per exec-svc |
-| /data                  | remote path |

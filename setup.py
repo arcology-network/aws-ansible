@@ -21,16 +21,19 @@ def createShell(shfile,commands,jobs):
         f.write('date\n')
         idx=0
         for cmd in commands:
-            f.write('{\n')
+            if len(commands)>1:
+                f.write('{\n')
             f.write('  '+cmd+'\n')
             f.write('  if [ $? -eq 0 ]; then\n')
             f.write('    echo "Instance created:['+jobs[idx]['ev'] +']"\n')
             f.write('  else\n')
             f.write('    echo "Instance ['+jobs[idx]['ev'] +'] FAILED, see log:'+jobs[idx]['log_file'] +'"\n')
             f.write('  fi\n')
-            f.write('} &\n')
+            if len(commands)>1:
+                f.write('} &\n')
             idx=idx+1
-        f.write('wait\n') 
+        if len(commands)>1:
+            f.write('wait\n') 
         f.write('date\n')    
 
 with open(sys.argv[1], 'r') as stream:
@@ -54,6 +57,7 @@ with open(sys.argv[1], 'r') as stream:
         
         
         for region in cfg['regions']:
+            node_idx = region['node_idx_start']
             for node_key in region['node_cluser_list']:
                 for inst in nodes[node_key]['instances']:
                     tag = str(node_idx)

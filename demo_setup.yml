@@ -76,6 +76,18 @@
             to_port: 19001
             cidr_ip: "0.0.0.0/0"
           - proto: "tcp"
+            from_port: 19004
+            to_port: 19004
+            cidr_ip: "0.0.0.0/0"
+          - proto: "tcp"
+            from_port: 19008
+            to_port: 19008
+            cidr_ip: "0.0.0.0/0"
+          - proto: "tcp"
+            from_port: 9100
+            to_port: 9100
+            cidr_ip: "0.0.0.0/0"
+          - proto: "tcp"
             from_port: 36656
             to_port: 36656
             cidr_ip: "0.0.0.0/0"
@@ -86,6 +98,18 @@
           - proto: "tcp"
             from_port: 8080
             to_port: 8080
+            cidr_ip: "0.0.0.0/0"
+          - proto: "tcp"
+            from_port: 7545
+            to_port: 7545
+            cidr_ip: "0.0.0.0/0"
+          - proto: "tcp"
+            from_port: 3000
+            to_port: 3000
+            cidr_ip: "0.0.0.0/0"
+          - proto: "tcp"
+            from_port: 3001
+            to_port: 3001
             cidr_ip: "0.0.0.0/0"
           - proto: "all"
             cidr_ip: "10.0.0.0/16"
