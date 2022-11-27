@@ -1,0 +1,141 @@
+- hosts: localhost
+  gather_facts: False
+  vars:
+    vpcname: My VPC
+    vpc_cidr_block: "10.0.0.0/16"
+    vpc_public_subnet_cidr: "10.0.0.0/24"
+    #keyname: ansible-key
+
+  tasks:
+    - name: Include secret
+      include_vars: secret.yml
+
+    - name: Create AWS VPC
+      ec2_vpc_net:
+        name: "{{ vpcname }}"
+        cidr_block: "{{ vpc_cidr_block }}"
+        region: "{{ region }}"
+        aws_access_key: "{{ ec2_access_key }}"
+        aws_secret_key: "{{ ec2_secret_key }}"
+        state: present
+      register: myvpc
+
+    - name: Create Public Subnet in VPC
+      ec2_vpc_subnet:
+        vpc_id: "{{ myvpc.vpc.id }}"
+        cidr: "{{ vpc_public_subnet_cidr }}"
+        region: "{{ region }}"
+        az: "{{ aws_zone }}"
+        aws_access_key: "{{ ec2_access_key }}"
+        aws_secret_key: "{{ ec2_secret_key }}"
+        state: present
+        tags:
+          Name: Public Subnet
+      register: my_public_subnet
+
+    - name: Create Internet Gateway
+      ec2_vpc_igw:
+        vpc_id: "{{ myvpc.vpc.id }}"
+        region: "{{ region }}"
+        aws_access_key: "{{ ec2_access_key }}"
+        aws_secret_key: "{{ ec2_secret_key }}"
+        state: present
+      register: myigw
+
+    - name: Create Route Table for Public Subnet
+      ec2_vpc_route_table:
+        vpc_id: "{{ myvpc.vpc.id }}"
+        region: "{{ region }}"
+        routes:
+          - dest: 0.0.0.0/0
+            gateway_id: "{{ myigw.gateway_id }}"
+        subnets:
+          - "{{ my_public_subnet.subnet.id }}"
+        aws_access_key: "{{ ec2_access_key }}"
+        aws_secret_key: "{{ ec2_secret_key }}"
+        tags:
+          Name: Public Subnet Route Table
+
+    - name: Create a new security group
+      ec2_group:
+        name: "ansible-sec-group"
+        description: "New SG for Ansible created instances"
+        region: "{{ region }}"
+        vpc_id: "{{ myvpc.vpc.id }}"
+        rules:
+          - proto: "tcp"
+            from_port: 22
+            to_port: 22
+            cidr_ip: "0.0.0.0/0"
+          - proto: "tcp"
+            from_port: 32768
+            to_port: 32768
+            cidr_ip: "0.0.0.0/0"
+          - proto: "tcp"
+            from_port: 19001
+            to_port: 19001
+            cidr_ip: "0.0.0.0/0"
+          - proto: "tcp"
+            from_port: 19004
+            to_port: 19004
+            cidr_ip: "0.0.0.0/0"
+          - proto: "tcp"
+            from_port: 19008
+            to_port: 19008
+            cidr_ip: "0.0.0.0/0"
+          - proto: "tcp"
+            from_port: 9100
+            to_port: 9100
+            cidr_ip: "0.0.0.0/0"
+          - proto: "tcp"
+            from_port: 36656
+            to_port: 36656
+            cidr_ip: "0.0.0.0/0"
+          - proto: "tcp"
+            from_port: 26656
+            to_port: 26656
+            cidr_ip: "0.0.0.0/0" 
+          - proto: "tcp"
+            from_port: 8080
+            to_port: 8080
+            cidr_ip: "0.0.0.0/0"
+          - proto: "tcp"
+            from_port: 7545
+            to_port: 7545
+            cidr_ip: "0.0.0.0/0"
+          - proto: "tcp"
+            from_port: 3000
+            to_port: 3000
+            cidr_ip: "0.0.0.0/0"
+          - proto: "tcp"
+            from_port: 3001
+            to_port: 3001
+            cidr_ip: "0.0.0.0/0"
+          - proto: "tcp"
+            from_port: 9191
+            to_port: 9191
+            cidr_ip: "0.0.0.0/0"
+          - proto: "tcp"
+            from_port: 9292
+            to_port: 9292
+            cidr_ip: "0.0.0.0/0"
+          - proto: "all"
+            cidr_ip: "10.0.0.0/16"
+        rules_egress:
+          - proto: "all"
+            cidr_ip: "0.0.0.0/0"
+      register: secgrp
+
+    - name: add subnet.id
+      lineinfile:
+        dest: '{{ conf }}'
+        line: "n:{{ region }},{{ aws_zone }},{{ my_public_subnet.subnet.id }}"
+        insertafter: EOF
+      delegate_to: localhost
+
+    - name: add group_id
+      lineinfile:
+        dest: '{{ conf }}'
+        line: "g:{{ region }},{{ secgrp.group_id }}"
+        insertafter: EOF
+      delegate_to: localhost

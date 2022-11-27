@@ -1,8 +1,8 @@
 {
 	"name":"mynet",
 	"chainid":1,
-	"concurrency":8,
-	"eus":32,
+	"concurrency":48,
+	"eus":48,
 	"user":"ubuntu",
 	"mount_point":"/data",
 	"ssh_port":"22",

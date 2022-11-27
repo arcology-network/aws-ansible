@@ -21,24 +21,8 @@ dmi_ids:
 regions:
   - region: ap-northeast-1
     zone: ap-northeast-1a
-    node_cluser_list: [testinst]
+    node_cluser_list: [testinst,testinst,testinst,testinst,testinst]
     node_idx_start: 0
-  - region: us-west-1
-    zone: us-west-1a
-    node_cluser_list: [testinst]
-    node_idx_start: 1
-  - region: us-east-2
-    zone: us-east-2a
-    node_cluser_list: [testinst]
-    node_idx_start: 2
-  - region: ap-southeast-1
-    zone: ap-southeast-1a
-    node_cluser_list: [testinst]
-    node_idx_start: 3
-  - region: eu-west-2
-    zone: eu-west-2a
-    node_cluser_list: [testinst]
-    node_idx_start: 4
 node_cfg:
   - id: testinst
     instances: 
